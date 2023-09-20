@@ -12,17 +12,6 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
-# @app.get("/")
-# async def read_root(request: Request):
-#     # List all files in the image directory
-#     image_files = [f for f in os.listdir(IMAGE_FOLDER) if os.path.isfile(os.path.join(IMAGE_FOLDER, f))]
-#     return templates.TemplateResponse("index.html", {"request": request, "images": image_files})
-
-
-
-
-# ... [the rest of your imports]
-
 def create_thumbnails(image_files, directory):
     print("creating thumbnails")
     base_height = 600
@@ -42,12 +31,14 @@ def create_thumbnails(image_files, directory):
 
     return os.path.join(directory, "thumbnails")
 
+
 def extract_numbers(filename):
     # Extract x and y values from the filename
     match = re.search(r'Epoch_(\d+)_(\d+).png', filename)
     if match:
         return (int(match.group(1)), int(match.group(2)))
     return (0, 0)
+
 
 @app.get("/")
 async def read_root(request: Request, images_dir: str = "images"):

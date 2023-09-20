@@ -8,7 +8,7 @@ from PIL import Image
 import numpy as np
 
 
-def extract_numbers(filename):
+def extract_numbers(filename:str):
     # Extract x and y values from the filename
     match = re.search(r'Epoch_(\d+)_(\d+).png', filename)
     if match:
@@ -16,7 +16,7 @@ def extract_numbers(filename):
     return (0, 0)
 
 
-def resize_image(image_path, width=600):
+def resize_image(image_path:str, width:int=600):
     """Resize the image to the specified width while maintaining the aspect ratio."""
     with Image.open(image_path) as img:
         aspect_ratio = float(img.height) / float(img.width)
