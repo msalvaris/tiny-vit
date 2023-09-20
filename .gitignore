@@ -147,3 +147,9 @@ Thumbs.db
 # PyTorch
 *.pt
 *.pth
+
+*.mp4
+
+tiny_vit
+tiny_vit_longer
+tiny_vit_val

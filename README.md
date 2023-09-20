@@ -1,8 +1,9 @@
 # Visual Transformers: Cats vs. Dogs Classification
 
+![Output Gif](images/output.gif)  <!-- Add the path if the GIF is located in another directory -->
+
 A machine learning project utilizing Visual Transformers (ViTs) to classify images from the Cats vs. Dogs dataset.
 
-![Cats vs. Dogs Sample Image](path-to-sample-image.jpg)  <!-- You can replace 'path-to-sample-image.jpg' with the path to an actual image from your dataset or any representative image. -->
 
 ## Table of Contents
 
@@ -60,11 +61,10 @@ Contributions are always welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for w
 
 ## Acknowledgements
 
-- Thanks to the creators of the [Cats vs. Dogs dataset](link-to-dataset).
-- Inspired by the [Visual Transformers paper](link-to-paper).
+- Thanks to the creators of the [Cats vs. Dogs dataset](https://www.kaggle.com/c/dogs-vs-cats).
+- Inspired by the [MAE paper](https://arxiv.org/abs/2111.06377).
 
 ---
 
 Ⓒ 2023 Mathew Salvaris. All Rights Reserved.
 ```
-
