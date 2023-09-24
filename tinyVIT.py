@@ -21,6 +21,7 @@ import fire
 from torchvision.utils import make_grid
 from torchvision.transforms.functional import to_pil_image
 from typing import Tuple
+import random
 
 
 class CatsDogsDataset(Dataset):
@@ -197,7 +198,6 @@ class ViT(nn.Module):
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, "1 1 d -> b 1 d", b=b)
-        ipdb.set_trace()
         x = torch.cat((cls_tokens, x), dim=1)
         x += self.pos_embedding[:, : (n + 1)]
         x = self.dropout(x)
@@ -413,7 +413,7 @@ def train_mae(data_dir: str):
     # Training settings
     batch_size = 256
 
-    lr = 1.5e-4
+    lr = 1.5e-5
     gamma = 0.7
     seed = 42
     device = "cuda"
@@ -513,6 +513,7 @@ def train_mae(data_dir: str):
             )
             # Visualise last batch
             with torch.no_grad():
+                model.eval()
                 for data, label in valid_loader:
                     data = data.to(device)
                     model_output, mask_indices = mae.predict_pixels(data)
@@ -528,6 +529,7 @@ def train_mae(data_dir: str):
                         vis_tuple, prefix=f"Epoch_{epoch}_", folder="tiny_vit_longer"
                     )
                     break
+                model.train()
 
     except KeyboardInterrupt:
         print("Interrupting training")
@@ -536,5 +538,141 @@ def train_mae(data_dir: str):
     torch.save({"mae": mae.state_dict(), "model": model.state_dict()}, savepath)
 
 
+def train_supervised(data_dir: str, pretrained_path=None):
+    # Training settings
+    batch_size = 256
+
+    lr = 1.5e-5
+    gamma = 0.7
+    seed = 42
+    device = "cuda"
+    savepath = "supervised_trained_mae.pt"
+    print(data_dir)
+    print(os.path.join(data_dir, "train", "*.jpg"))
+    all_data = glob.glob(os.path.join(data_dir, "train", "*.jpg"))
+    # Create train test split
+    test_list = random.sample(all_data, int(len(all_data)*.1))
+    train_list = [ex for ex in all_data if ex not in test_list]
+    print(f"Train Data: {len(train_list)}")
+    print(f"Test Data: {len(test_list)}")
+    
+    train_transforms = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ]
+    )
+
+    test_transforms = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+        ]
+    )
+
+    train_data = CatsDogsDataset(train_list, transform=train_transforms)
+    valid_data = CatsDogsDataset(test_list, transform=test_transforms)
+
+    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(dataset=valid_data, batch_size=batch_size, shuffle=False)
+
+    model = ViT(
+        dim=1024,
+        image_size=224,
+        patch_size=16,
+        num_classes=2,
+        channels=3,
+        depth=6,
+        heads=8,
+        mlp_dim=2048,
+        dropout=0.1,
+        emb_dropout=0.1,
+    ).to(device)
+
+    if pretrained_path:
+        print(f"Loading pretrained model {pretrained_path}")
+        checkpoint = torch.load(pretrained_path)
+        model.load_state_dict(checkpoint['model'])
+
+    epochs = 160
+    num_epochs = 150
+    number_warmup_epochs = 10
+
+    # loss function
+    criterion = nn.CrossEntropyLoss()
+    # optimizer
+    optimizer = optim.AdamW(
+        model.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=0.05
+    )
+
+    train_scheduler = CosineAnnealingLR(optimizer, num_epochs)
+
+    def warmup(current_step: int):
+        return current_step / number_warmup_epochs
+
+    warmup_scheduler = LambdaLR(optimizer, lr_lambda=warmup)
+
+    scheduler = SequentialLR(
+        optimizer, [warmup_scheduler, train_scheduler], [number_warmup_epochs]
+    )
+
+    try:
+        for epoch in range(epochs):
+            epoch_loss = 0
+            epoch_accuracy = 0
+            batch_count = 0
+
+            for data, label in train_loader:
+                data = data.to(device)
+                label = label.to(device)
+
+                output = model(data)
+                loss = criterion(output, label)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                acc = (output.argmax(dim=1) == label).float().mean()
+                epoch_accuracy += acc / len(train_loader)
+                epoch_loss += loss / len(train_loader)
+
+                batch_count += 1
+                if batch_count % 10 == 0:
+                    print(
+                        f"Batch : {batch_count} - loss : {epoch_loss:.4f} | lr : {scheduler.get_last_lr()}"
+                    )
+            scheduler.step()
+            
+            # Eval
+            with torch.no_grad():
+                model.eval()
+                epoch_val_accuracy = 0
+                epoch_val_loss = 0
+                for data, label in valid_loader:
+                    data = data.to(device)
+                    label = label.to(device)
+
+                    val_output = model(data)
+                    val_loss = criterion(val_output, label)
+
+                    acc = (val_output.argmax(dim=1) == label).float().mean()
+                    epoch_val_accuracy += acc / len(valid_loader)
+                    epoch_val_loss += val_loss / len(valid_loader)
+                model.train()
+
+            print(
+                f"-- Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f} | lr : {scheduler.get_last_lr()}"
+            )
+    
+    except KeyboardInterrupt:
+        print("Interrupting training")
+
+    print(f"Saving model to {savepath}")
+    torch.save({"model": model.state_dict()}, savepath)
+
 if __name__ == "__main__":
-    fire.Fire({"prepare-data": prepare_data, "train-mae": train_mae})
+    fire.Fire({"prepare-data": prepare_data, "train-mae": train_mae, "train": train_supervised})

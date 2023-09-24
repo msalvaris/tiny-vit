@@ -1,8 +1,11 @@
 # Visual Transformers: Cats vs. Dogs Classification
 
-![Output Gif](images/output.gif)  <!-- Add the path if the GIF is located in another directory -->
 
 A machine learning project utilizing Visual Transformers (ViTs) to classify images from the Cats vs. Dogs dataset.
+
+
+![Example](images/example.png)  
+
 
 
 ## Table of Contents
@@ -16,7 +19,9 @@ A machine learning project utilizing Visual Transformers (ViTs) to classify imag
 
 ## Introduction
 
-The Cats vs. Dogs dataset is a standard computer vision dataset that contains images of cats and dogs. In this project, instead of using conventional CNNs, we utilize Visual Transformers (ViTs), a relatively new paradigm in computer vision.
+The Cats vs. Dogs dataset is a standard computer vision dataset that contains images of cats and dogs. In this project, instead of using conventional CNNs, we utilize Visual Transformers (ViTs). The Cats vs. Dogs dataset is only a small collection of 25K annotated images. The purpose of this project is to see if we can use MAE to pretrain the model to achieve a better result than simply trainining from random initialisation. 
+
+![Output Gif](images/output.gif)  
 
 ## Installation
 
@@ -49,15 +54,13 @@ python evaluate.py
 
 ## Results
 
-We achieved an accuracy of XX% on the test set using ViTs. Check out the [Jupyter notebook](./results-analysis.ipynb) for a deep dive into the analysis.
+We achieved an accuracy of 83.46% on a randomly sampled validation set of 2500 images using a ViT with random weight initialisation. If we used a pretrained network trained use MAE then the final accuracy on the same validation set was 93.29%. Also of note that we reached this accuracy around 80 epochs where the best performance from random initialisation was reached only after 158 epochs. 
 
 | Model           | Accuracy (%) |
 |-----------------|--------------|
-| Visual Transformer | XX         |
+| Visual Transformer | 83.46         |
+| Visual Transformer + MAE | 93.29         |
 
-## Contribute
-
-Contributions are always welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for ways to get started.
 
 ## Acknowledgements
 
@@ -67,4 +70,3 @@ Contributions are always welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for w
 ---
 
 Ⓒ 2023 Mathew Salvaris. All Rights Reserved.
-```
