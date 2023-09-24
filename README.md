@@ -7,7 +7,6 @@ A machine learning project utilizing Visual Transformers (ViTs) to classify imag
 ![Example](images/example.png)  
 
 
-
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -39,17 +38,22 @@ The Cats vs. Dogs dataset is a standard computer vision dataset that contains im
    ```
 
 ## Usage
-
-To train the model:
+To prepare the data:
 
 ```bash
-python train.py
+python tinyVIT.py prepare-data
 ```
 
-To evaluate the model:
+To train the model using MAE:
 
 ```bash
-python evaluate.py
+python tinyVIT.py train-mae
+```
+
+To train the model using supervision:
+
+```bash
+python tinyVIT.py train
 ```
 
 ## Results

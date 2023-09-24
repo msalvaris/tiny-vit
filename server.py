@@ -1,3 +1,6 @@
+"""Small server to diplay local images in a grid
+"""
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
@@ -19,7 +22,6 @@ def create_thumbnails(image_files, directory):
     for img_file in image_files:
          # Open an image with PIL
         img = Image.open(os.path.join(directory, img_file))
-        # directory,fname = os.path.split(img_file)
 
         # Resize while maintaining the aspect ratio
         hpercent = base_height / float(img.size[1])

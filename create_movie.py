@@ -1,4 +1,6 @@
 
+"""Small script to take the images of the MAE output and create movie from it
+"""
 import imageio
 import os
 import glob
